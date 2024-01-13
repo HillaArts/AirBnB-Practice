@@ -1,23 +1,24 @@
 #!/usr/bin/python3
-
 import json
 from models.base_model import BaseModel
-from models.user import User
+from models.state import State
+from models.city import City
+from models.amenity import Amenity
+from models.place import Place
+from models.review import Review
 
 class FileStorage:
     """ File storage class """
 
-    # Class variable to store the objects
     _objects = {}
-
-    # Class variable to store the path of the JSON file
     _file_path = "file.json"
-
-    # Dictionary to map class names to class objects
     CLASSES = {
         'BaseModel': BaseModel,
-        'User': User,
-        # Add other classes as needed
+        'State': State,
+        'City': City,
+        'Amenity': Amenity,
+        'Place': Place,
+        'Review': Review
     }
 
     def all(self):

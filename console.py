@@ -3,10 +3,8 @@
 Entry point of the command interpreter.
 """
 import cmd
-from models.base_model import BaseModel
-from models.user import User
-from models.engine.file_storage import FileStorage
 from models import storage
+from datetime import datetime
 
 class HBNBCommand(cmd.Cmd):
     prompt = '(hbnb) '
@@ -19,10 +17,10 @@ class HBNBCommand(cmd.Cmd):
             print("** class name missing **")
             return
         class_name = args[0]
-        if class_name not in FileStorage.CLASSES:
+        if class_name not in storage.CLASSES:
             print("** class doesn't exist **")
             return
-        new_instance = FileStorage.CLASSES[class_name]()
+        new_instance = storage.CLASSES[class_name]()
         new_instance.save()
         print(new_instance.id)
 
@@ -33,7 +31,7 @@ class HBNBCommand(cmd.Cmd):
             print("** class name missing **")
             return
         class_name = args[0]
-        if class_name not in FileStorage.CLASSES:
+        if class_name not in storage.CLASSES:
             print("** class doesn't exist **")
             return
         if len(args) < 2:
@@ -54,7 +52,7 @@ class HBNBCommand(cmd.Cmd):
             print("** class name missing **")
             return
         class_name = args[0]
-        if class_name not in FileStorage.CLASSES:
+        if class_name not in storage.CLASSES:
             print("** class doesn't exist **")
             return
         if len(args) < 2:
@@ -74,21 +72,36 @@ class HBNBCommand(cmd.Cmd):
         args = arg.split()
         all_objs = storage.all()
         if len(args) == 0:
-            print([str(all_objs[obj]) for obj in all_objs])
+            print([str(obj) for obj in all_objs.values()])
         else:
-            if args[0] not in FileStorage.CLASSES:
+            class_name = args[0]
+            if class_name not in storage.CLASSES:
                 print("** class doesn't exist **")
                 return
-            print([str(all_objs[obj]) for obj in all_objs if args[0] in obj])
+            print([str(obj) for obj in all_objs.values() if isinstance(obj, storage.CLASSES[class_name])])
 
-    def do_update(self, arg):
-        """ Updates an instance based on the class name and id by adding or updating attribute """
+    def do_count(self, arg):
+        """ Retrieves the number of instances of a class """
         args = arg.split()
         if len(args) == 0:
             print("** class name missing **")
             return
         class_name = args[0]
-        if class_name not in FileStorage.CLASSES:
+        if class_name not in storage.CLASSES:
+            print("** class doesn't exist **")
+            return
+        all_objs = storage.all()
+        count = sum(1 for obj in all_objs.values() if isinstance(obj, storage.CLASSES[class_name]))
+        print(count)
+
+    def do_update(self, arg):
+        """ Updates an instance based on the class name and id with a dictionary representation """
+        args = arg.split()
+        if len(args) == 0:
+            print("** class name missing **")
+            return
+        class_name = args[0]
+        if class_name not in storage.CLASSES:
             print("** class doesn't exist **")
             return
         if len(args) < 2:
@@ -101,12 +114,18 @@ class HBNBCommand(cmd.Cmd):
             print("** no instance found **")
             return
         if len(args) < 3:
-            print("** attribute name missing **")
+            print("** dictionary missing **")
             return
-        if len(args) < 4:
-            print("** value missing **")
+        try:
+            update_dict = eval(args[2])
+            if not isinstance(update_dict, dict):
+                raise ValueError("Not a dictionary")
+        except (NameError, ValueError, SyntaxError):
+            print("** invalid dictionary **")
             return
-        setattr(all_objs[key], args[2], args[3])
+        for k, v in update_dict.items():
+            setattr(all_objs[key], k, v)
+        setattr(all_objs[key], 'updated_at', datetime.now())
         storage.save()
 
     def do_quit(self, arg):
